@@ -1,12 +1,14 @@
 package main
 
 import (
-	"./path_util"
 	"./convert_yaml"
+	"./error_checker"
+	"./path_util"
 
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 const (
@@ -15,18 +17,18 @@ const (
 
 type Question struct {
 	questionString string
-	value string
+	value          string
 }
 
 var questions []Question
 
-func printString(content string){
+func printString(content string) {
 	fmt.Printf("%c[%d;%dm%s%c[0m", 0x1B, 0, 34, content, 0x1B)
 }
 
-func processValue(value string) string{
+func processValue(value string) string {
 	if value != "" {
-		return fmt.Sprintf("(%s) ",value)
+		return fmt.Sprintf("(%s) ", value)
 	}
 
 	return ""
@@ -35,8 +37,8 @@ func processValue(value string) string{
 func getInfo() {
 	input := bufio.NewScanner(os.Stdin)
 
-	for i := 0;i < len(questions);i++ {
-		printString(fmt.Sprintf("%s %s: ",questions[i].questionString, processValue(questions[i].value)))
+	for i := 0; i < len(questions); i++ {
+		printString(fmt.Sprintf("%s %s: ", questions[i].questionString, processValue(questions[i].value)))
 		input.Scan()
 
 		if input.Text() != "" {
@@ -45,47 +47,31 @@ func getInfo() {
 	}
 }
 
-// convert question array to yaml
-//func covertYAML(){
-//
-//}
-//
-//func buildFile() (ok bool) {
-//	isExist := path_util.IsExist(TARGET_FILE_NAEM)
-//	if(isExist) {
-//		return false
-//	} else {
-//		f, err := os.Create(TARGET_FILE_NAEM)
-//		defer f.Close()
-//		checker.CheckErr(err)
-//		f.WriteString(strings.Join([]string{
-//
-//		}, "\n"))
-//	}
-//}
+func buildFile() {
+	f, err := os.Create("./" + TARGET_FILE_NAEM)
+	defer f.Close()
 
-func main(){
-	//name := YAMLConverter.String("name", "zhangsan")
-	//fmt.Println(name)
+	content := make([]string, 0)
 
-	//obj := YAMLConverter.MultipleObject([]string{
-	//	"name",
-	//	"age",
-	//}, []string{
-	//	"zhangsan",
-	//	"19",
-	//})
-	//fmt.Println(YAMLConverter.Complex("person", obj))
+	for i := 0; i < len(questions); i++ {
+		content = append(content, YAMLConverter.Simple(questions[i].questionString, questions[i].value))
+	}
 
-	arr := YAMLConverter.Array([]interface{}{"a", []interface{}{
-		"e",
-		"f",
-	}, "c"})
+	checker.CheckErr(err)
+	f.WriteString(strings.Join(content, "\n"))
 
-	fmt.Println(arr)
 }
 
-func init(){
+func main() {
+	if !path_util.IsExist(TARGET_FILE_NAEM) {
+		getInfo()
+		buildFile()
+	} else {
+		fmt.Println("pubspec is exist")
+	}
+}
+
+func init() {
 	// fill questions
 	questions = []Question{
 		{
@@ -110,4 +96,3 @@ func init(){
 		},
 	}
 }
-
