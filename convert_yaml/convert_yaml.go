@@ -2,6 +2,7 @@ package YAMLConverter
 
 import (
 	"../error_checker"
+	"../parser"
 
 	"fmt"
 	"regexp"
@@ -22,17 +23,17 @@ func MultipleObject(keys []string, vals []string) string {
 	return strings.Join(objContent, "\n")
 }
 
-func Array(arr []interface{}) string{
+func Array(arr interface{}, layer int) string{
+	slice := parser.Slice(arr)
 	isArrRegex, err := regexp.Compile("^\\[\\]")
 	checker.CheckErr(err)
 	targetArr := make([]string, 0)
 
-	for _, ele := range arr {
+	for _, ele := range slice {
 		if isArrRegex.MatchString(fmt.Sprintf("%T", ele)) {
-			//re
-			targetArr = append(targetArr, fmt.Sprintf(" \n- %s", Array((ele.([]interface{})))))
+			targetArr = append(targetArr, fmt.Sprintf("%s", Array((ele.([]interface{})), layer + 1)))
 		} else {
-			targetArr = append(targetArr, fmt.Sprintf(" - %s", ele))
+			targetArr = append(targetArr, fmt.Sprintf("%s- %s", repeatSpace(layer), ele))
 		}
 	}
 
@@ -47,3 +48,12 @@ func Simple(key string, val string) string {
 	return fmt.Sprintf("%s: %s", key, val)
 }
 
+func repeatSpace(count int) string {
+	spaces := make([]string, 0)
+
+	for i := 0;i < count;i++ {
+		spaces = append(spaces, " ")
+	}
+
+	return strings.Join(spaces, "")
+}
